@@ -1,16 +1,19 @@
+# TODO:
+# - missing BR/R?
+# - disable altivec/3dnow autodetection - force values from spec
+# - fix for other arches
+# - deal with -fPIC to get shared libs
 Summary:	The atlas libraries for numerical linear algebra
 Summary(pl):	Biblioteki numeryczne atlas do algebry liniowej
 Name:		atlas
 Version:	3.7.10
-Release:	1
-License:	freely distributable
+Release:	0.1
+License:	BSD
 Group:		Development/Libraries
 Source0:	http://dl.sourceforge.net/math-atlas/%{name}%{version}.tar.bz2
 # Source0-md5:	c24aa9f676122fe6331fa63dd88c4113
 URL:		http://math-atlas.sourceforge.net/
-BuildRequires:	autoconf
-BuildRequires:	automake
-BuildRequires:	libtool >= 1:1.4.2-9
+BuildRequires:	expect
 BuildRequires:	gcc-g77
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -26,8 +29,6 @@ Summary:	atlas header files
 Summary(pl):	Pliki nag³ówkowe atlas
 Group:		Development/Libraries
 Requires:	%{name} = %{version}
-Requires:	blas-devel = %{version}
-Obsoletes:	lapack-man
 
 %description devel
 atlas header files.
@@ -47,56 +48,6 @@ Static atlas libraries.
 %description static -l pl
 Biblioteki statyczne atlas.
 
-%package -n blas
-Summary:	The BLAS (Basic Linear Algebra Subprograms) library for Linux
-Summary(pl):	Biblioteka BLAS (Basic Linear Algebra Subprograms) dla Linuksa
-Group:		Development/Libraries
-Obsoletes:	lapack-blas
-
-%description -n blas
-BLAS (Basic Linear Algebra Subprograms) is a standard library for
-numerical algebra. BLAS provides a number of basic algorithms for
-linear algebra. BLAS is fast and well-tested, was written in FORTRAN
-77.
-
-Warning: this is a reference implementation from Netlib. If possible,
-use version optimized for your architecture instead.
-
-%description -n blas -l pl
-BLAS (Basic Linear Algebra Subprograms) jest standardow± bibliotek±
-numeryczn± algebry. Dostarcza wiele podstawowych algorytmów dla
-algebry liniowej. Jest szybka i dobrze przetestowana, zosta³a napisana
-w Fortranie 77.
-
-Ostrze¿enie: to jest implementacja przyk³adowa z repozytorium Netlib.
-Je¿eli to mo¿liwe, nale¿y u¿ywaæ zamiast niej wersji zoptymalizowanej
-pod dan± architekturê.
-
-%package -n blas-devel
-Summary:	BLAS header files
-Summary(pl):	Pliki nag³ówkowe BLAS
-Group:		Development/Libraries
-Requires:	blas = %{version}
-Obsoletes:	blas-man
-
-%description -n blas-devel
-BLAS header files.
-
-%description -n blas-devel -l pl
-Pliki nag³ówkowe BLAS.
-
-%package -n blas-static
-Summary:	Static BLAS libraries
-Summary(pl):	Biblioteki statyczne BLAS
-Group:		Development/Libraries
-Requires:	blas-devel = %{version}
-
-%description -n blas-static
-Static BLAS libraries.
-
-%description -n blas-static -l pl
-Biblioteki statyczne BLAS.
-
 %prep
 %setup -q -n ATLAS
 
@@ -110,7 +61,10 @@ spawn ./xconfig
 while {\$finished == 0} {
   set timeout 120
   expect {
-    -nocase {Enter number at top left of screen}  {send "99\n"}
+%ifarch %{x8664} sparc64
+    -nocase {Enter bit number \[2\]:}	{send "2\n"}
+%endif
+    -nocase {Enter number at top left of screen}  {send "25\n"}
     -nocase {Have you scoped the errata file\?}   {send "y\n"}
     -nocase {Are you ready to continue\?}         {send "y\n"}
     -nocase {Enter machine number \[2\]: }        {send "1\n"}
@@ -118,7 +72,7 @@ while {\$finished == 0} {
     -nocase {enable Posix threads support\?}      {send "y\n"}
     -nocase {use express setup\?}                 {send "y\n"}
     -nocase -indices -re {Enter Architecture name \(ARCH\) \[(.*)\]}
-     {global arch; set arch Linux_PPCGP; send "Linux_PPCGP\n"}
+     {global arch; set arch \$expect_out(1,string); send "\$arch\n"}
     -nocase {overwrite it\?}                      {send "y\n"}
     -nocase {Enter File creation delay in seconds}
                                                   {send "0\n"}
@@ -152,27 +106,81 @@ close
 #file copy -force Make.\$arch Make.Linux
 exit
 EOF
-  make xconfig
-  expect -f config.expect
-  rm -f config.expect
+%{__make} xconfig
+expect -f config.expect
+rm -f config.expect
+
+mksolib() {
+	#set -x
+	lib=$1
+	mode=$2
+	v=$3
+	so=$4
+	rm -f lib$lib.a
+	ar ruv lib$lib.a *.o
+	if [ -r *.lo ]; then
+	  ar ruv lib$lib.a *.lo
+	fi
+	%{__cc} -shared -Wl,-soname,lib${lib}.so.${so} -Wl,--whole-archive -L. -l${lib} -Wl,--no-whole-archive -o lib${lib}.so.${v}
+	ln -s lib${lib}.so.${v} lib${lib}.so.${so}
+	ln -s lib${lib}.so.${v} lib${lib}.so
+	rm -f *.o *.lo
+}
+
+%ifarch %{x8664} sparc64
+OBJECT_MODE=64
+%else
+OBJECT_MODE=32
+%endif
+export OBJECT_MODE
+
+arch=$(ls -1 Make.Linux* | sed -e 's#^Make\.##g')
+
+%{__make} install \
+	CC="%{__cc}" \
+	arch=${arch}
+
+install -d lib/${arch}/shared
+cd lib/${arch}/shared
+libs="atlas cblas f77blas lapack tstatlas"
+
+for lib in `echo ${libs} | xargs`; do
+	case "$lib" in
+		"lapack")
+			lib=atllapack
+			;;
+		"cblas")
+			lib=atlcblas
+			;;
+	esac
+	echo $lib
+	ar x ../lib${lib}.a
+	mksolib ${lib} ${OBJECT_MODE} 1.1 1
+	mv *.so* ../
+	mv *.a ../
+done
+cd ../../../
+rm -rf lib/${arch}/shared
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install DESTDIR=$RPM_BUILD_ROOT
+arch=$(ls -1 Make.Linux* | sed -e 's#^Make\.##g')
 
-# present both in blas and lapack
-rm -f man/manl/{lsame,xerbla}.l
+install -d $RPM_BUILD_ROOT{%{_includedir}/%{name},%{_libdir}}
 
-install -d $RPM_BUILD_ROOT%{_mandir}/man3
-for d in man/manl/*.l blas/man/manl/*.l ; do
-	install $d $RPM_BUILD_ROOT%{_mandir}/man3/`basename $d .l`.3
+libs="atlas cblas f77blas lapack tstatlas"
+
+cd lib/${arch}/
+for lib in `echo ${libs} | xargs`; do
+	install lib${lib}.a $RPM_BUILD_ROOT%{_libdir}
+	install lib${lib}.so.1.1 $RPM_BUILD_ROOT%{_libdir}
+	ln -s lib${lib}.so.1.1 $RPM_BUILD_ROOT%{_libdir}/lib${lib}.so
 done
+cd ../../
 
-echo "%defattr(644, root, root, 755)" > blasmans.list
-find blas/man/manl -name "*.l" -printf "%{_mandir}/man3/%%f\n" | sed 's/\.l/.3*/' >> blasmans.list
-echo "%defattr(644, root, root, 755)" > mans.list
-find man/manl -name "*.l" -printf "%{_mandir}/man3/%%f\n" | sed 's/\.l/.3*/' >> mans.list
+cp -a include/* $RPM_BUILD_ROOT%{_includedir}/%{name}
+
 
 %clean
 rm -fr $RPM_BUILD_ROOT
@@ -180,32 +188,16 @@ rm -fr $RPM_BUILD_ROOT
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
 
-%post   -n blas -p /sbin/ldconfig
-%postun -n blas -p /sbin/ldconfig
-
 %files
 %defattr(644,root,root,755)
-%doc README
-%attr(755,root,root) %{_libdir}/liblapack.so.*.*.*
+%doc doc/*
+%attr(755,root,root) %{_libdir}/lib*.so.*
 
-%files devel -f mans.list
+%files devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/liblapack.so
-%{_libdir}/liblapack.la
+%attr(755,root,root) %{_libdir}/lib*.so
+%{_includedir}/%{name}
 
 %files static
 %defattr(644,root,root,755)
-%{_libdir}/liblapack.a
-
-%files -n blas
-%defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libblas.so.*.*.*
-
-%files -n blas-devel -f blasmans.list
-%defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libblas.so
-%{_libdir}/libblas.la
-
-%files -n blas-static
-%defattr(644,root,root,755)
-%{_libdir}/libblas.a
+%{_libdir}/lib*.a
