@@ -9,7 +9,7 @@ Name:		atlas
 Version:	3.7.10
 Release:	0.1
 License:	BSD
-Group:		Development/Libraries
+Group:		Libraries
 Source0:	http://dl.sourceforge.net/math-atlas/%{name}%{version}.tar.bz2
 # Source0-md5:	c24aa9f676122fe6331fa63dd88c4113
 URL:		http://math-atlas.sourceforge.net/
@@ -24,11 +24,19 @@ order to provide portable performance. At present, it provides C and
 Fortran77 interfaces to a portably efficient BLAS implementation, as
 well as a few routines from LAPACK.
 
+%description -l pl
+Projekt ATLAS (Automatically Tuned Linear Algebra Software -
+automatycznie dostrajane oprogramowanie do algebry liniowej) to próby
+badawcze skupiaj±ce siê na stosowaniu technik empirycznych w celu
+zapewnienia przeno¶nej wydajno¶ci. Aktualnie dostarczane s± interfejsy
+w C i Fortranie 77 do przeno¶nej, wydajnej implementacji BLAS, a tak¿e
+kilku procedur LAPACK.
+
 %package devel
 Summary:	atlas header files
 Summary(pl):	Pliki nag³ówkowe atlas
 Group:		Development/Libraries
-Requires:	%{name} = %{version}
+Requires:	%{name} = %{version}-%{release}
 
 %description devel
 atlas header files.
@@ -40,7 +48,7 @@ Pliki nag³ówkowe atlas.
 Summary:	Static atlas libraries
 Summary(pl):	Biblioteki statyczne atlas
 Group:		Development/Libraries
-Requires:	%{name}-devel = %{version}
+Requires:	%{name}-devel = %{version}-%{release}
 
 %description static
 Static atlas libraries.
@@ -156,10 +164,10 @@ for lib in `echo ${libs} | xargs`; do
 	echo $lib
 	ar x ../lib${lib}.a
 	mksolib ${lib} ${OBJECT_MODE} 1.1 1
-	mv *.so* ../
-	mv *.a ../
+	mv *.so* ..
+	mv *.a ..
 done
-cd ../../../
+cd ../../..
 rm -rf lib/${arch}/shared
 
 %install
@@ -171,13 +179,13 @@ install -d $RPM_BUILD_ROOT{%{_includedir}/%{name},%{_libdir}}
 
 libs="atlas cblas f77blas lapack tstatlas"
 
-cd lib/${arch}/
+cd lib/${arch}
 for lib in `echo ${libs} | xargs`; do
 	install lib${lib}.a $RPM_BUILD_ROOT%{_libdir}
 	install lib${lib}.so.1.1 $RPM_BUILD_ROOT%{_libdir}
 	ln -s lib${lib}.so.1.1 $RPM_BUILD_ROOT%{_libdir}/lib${lib}.so
 done
-cd ../../
+cd ../..
 
 cp -a include/* $RPM_BUILD_ROOT%{_includedir}/%{name}
 
