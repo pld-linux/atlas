@@ -4,7 +4,7 @@
 # - fix for other arches
 # - deal with -fPIC to get shared libs
 Summary:	The atlas libraries for numerical linear algebra
-Summary(pl.UTF-8):   Biblioteki numeryczne atlas do algebry liniowej
+Summary(pl.UTF-8):	Biblioteki numeryczne atlas do algebry liniowej
 Name:		atlas
 Version:	3.7.10
 Release:	0.1
@@ -34,7 +34,7 @@ kilku procedur LAPACK.
 
 %package devel
 Summary:	atlas header files
-Summary(pl.UTF-8):   Pliki nagłówkowe atlas
+Summary(pl.UTF-8):	Pliki nagłówkowe atlas
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 
@@ -46,7 +46,7 @@ Pliki nagłówkowe atlas.
 
 %package static
 Summary:	Static atlas libraries
-Summary(pl.UTF-8):   Biblioteki statyczne atlas
+Summary(pl.UTF-8):	Biblioteki statyczne atlas
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 
