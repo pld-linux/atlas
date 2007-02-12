@@ -4,7 +4,7 @@
 # - fix for other arches
 # - deal with -fPIC to get shared libs
 Summary:	The atlas libraries for numerical linear algebra
-Summary(pl):	Biblioteki numeryczne atlas do algebry liniowej
+Summary(pl.UTF-8):   Biblioteki numeryczne atlas do algebry liniowej
 Name:		atlas
 Version:	3.7.10
 Release:	0.1
@@ -24,36 +24,36 @@ order to provide portable performance. At present, it provides C and
 Fortran77 interfaces to a portably efficient BLAS implementation, as
 well as a few routines from LAPACK.
 
-%description -l pl
+%description -l pl.UTF-8
 Projekt ATLAS (Automatically Tuned Linear Algebra Software -
-automatycznie dostrajane oprogramowanie do algebry liniowej) to prÛby
-badawcze skupiaj±ce siÍ na stosowaniu technik empirycznych w celu
-zapewnienia przeno∂nej wydajno∂ci. Aktualnie dostarczane s± interfejsy
-w C i Fortranie 77 do przeno∂nej, wydajnej implementacji BLAS, a takøe
+automatycznie dostrajane oprogramowanie do algebry liniowej) to pr√≥by
+badawcze skupiajƒÖce siƒô na stosowaniu technik empirycznych w celu
+zapewnienia przeno≈õnej wydajno≈õci. Aktualnie dostarczane sƒÖ interfejsy
+w C i Fortranie 77 do przeno≈õnej, wydajnej implementacji BLAS, a tak≈ºe
 kilku procedur LAPACK.
 
 %package devel
 Summary:	atlas header files
-Summary(pl):	Pliki nag≥Ûwkowe atlas
+Summary(pl.UTF-8):   Pliki nag≈Ç√≥wkowe atlas
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 
 %description devel
 atlas header files.
 
-%description devel -l pl
-Pliki nag≥Ûwkowe atlas.
+%description devel -l pl.UTF-8
+Pliki nag≈Ç√≥wkowe atlas.
 
 %package static
 Summary:	Static atlas libraries
-Summary(pl):	Biblioteki statyczne atlas
+Summary(pl.UTF-8):   Biblioteki statyczne atlas
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 
 %description static
 Static atlas libraries.
 
-%description static -l pl
+%description static -l pl.UTF-8
 Biblioteki statyczne atlas.
 
 %prep
