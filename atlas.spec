@@ -191,7 +191,7 @@ cp -a include/* $RPM_BUILD_ROOT%{_includedir}/%{name}
 
 
 %clean
-rm -fr $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
